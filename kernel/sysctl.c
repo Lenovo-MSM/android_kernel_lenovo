@@ -1383,42 +1383,28 @@ static struct ctl_table vm_table[] = {
 		.extra2		= &one,
 	},
 #endif
-	{
-		.procname	= "user_reserve_kbytes",
-		.data		= &sysctl_user_reserve_kbytes,
-		.maxlen		= sizeof(sysctl_user_reserve_kbytes),
-		.mode		= 0644,
-		.proc_handler	= proc_doulongvec_minmax,
-	},
-	{
-		.procname	= "admin_reserve_kbytes",
-		.data		= &sysctl_admin_reserve_kbytes,
-		.maxlen		= sizeof(sysctl_admin_reserve_kbytes),
-		.mode		= 0644,
-		.proc_handler	= proc_doulongvec_minmax,
-	},
 #ifdef CONFIG_HAVE_ARCH_MMAP_RND_BITS
-	{
-		.procname	= "mmap_rnd_bits",
-		.data		= &mmap_rnd_bits,
-		.maxlen		= sizeof(mmap_rnd_bits),
-		.mode		= 0600,
-		.proc_handler	= proc_dointvec_minmax,
-		.extra1		= (void *)&mmap_rnd_bits_min,
-		.extra2		= (void *)&mmap_rnd_bits_max,
-	},
+ 	{
+ 		.procname	= "mmap_rnd_bits",
+ 		.data		= &mmap_rnd_bits,
+ 		.maxlen		= sizeof(mmap_rnd_bits),
+ 		.mode		= 0600,
+ 		.proc_handler	= proc_dointvec_minmax,
+ 		.extra1		= (void *)&mmap_rnd_bits_min,
+ 		.extra2		= (void *)&mmap_rnd_bits_max,
+ 	},
 #endif
 #ifdef CONFIG_HAVE_ARCH_MMAP_RND_COMPAT_BITS
-	{
-		.procname	= "mmap_rnd_compat_bits",
-		.data		= &mmap_rnd_compat_bits,
-		.maxlen		= sizeof(mmap_rnd_compat_bits),
-		.mode		= 0600,
-		.proc_handler	= proc_dointvec_minmax,
-		.extra1		= (void *)&mmap_rnd_compat_bits_min,
-		.extra2		= (void *)&mmap_rnd_compat_bits_max,
-	},
-
+ 	{
+ 		.procname	= "mmap_rnd_compat_bits",
+ 		.data		= &mmap_rnd_compat_bits,
+ 		.maxlen		= sizeof(mmap_rnd_compat_bits),
+ 		.mode		= 0600,
+ 		.proc_handler	= proc_dointvec_minmax,
+ 		.extra1		= (void *)&mmap_rnd_compat_bits_min,
+ 		.extra2		= (void *)&mmap_rnd_compat_bits_max,
+ 	},
+#endif
 	{ }
 };
 
