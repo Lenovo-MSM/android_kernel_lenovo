@@ -71,6 +71,7 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 		start_addr = addr = TASK_UNMAPPED_BASE;
 	        mm->cached_hole_size = 0;
 	}
+<<<<<<< HEAD
 	/* 8 bits of randomness in 20 address space bits */
 	if ((current->flags & PF_RANDOMIZE) &&
 	    !(current->personality & ADDR_NO_RANDOMIZE))
@@ -108,6 +109,26 @@ full_search:
 		addr = vma->vm_end;
 		if (do_align)
 			addr = COLOUR_ALIGN(addr, pgoff);
+=======
+
+	return addr;
+}
+
+void arch_pick_mmap_layout(struct mm_struct *mm)
+{
+	unsigned long random_factor = 0UL;
+
+	if ((current->flags & PF_RANDOMIZE) &&
+	    !(current->personality & ADDR_NO_RANDOMIZE))
+		random_factor = (get_random_int() & ((1 << mmap_rnd_bits) - 1)) << PAGE_SHIFT;
+
+	if (mmap_is_legacy()) {
+		mm->mmap_base = TASK_UNMAPPED_BASE + random_factor;
+		mm->get_unmapped_area = arch_get_unmapped_area;
+	} else {
+		mm->mmap_base = mmap_base(random_factor);
+		mm->get_unmapped_area = arch_get_unmapped_area_topdown;
+>>>>>>> be43775... FROMLIST: arm: mm: support ARCH_MMAP_RND_BITS.
 	}
 }
 
