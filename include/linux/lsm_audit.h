@@ -41,8 +41,8 @@ struct lsm_network_audit {
 };
 
 struct lsm_ioctlop_audit {
- struct path path;
- u16 cmd;
+	struct path path;
+	u16 cmd;
 };
 
 /* Auxiliary data to use in generating the audit record. */
@@ -58,6 +58,7 @@ struct common_audit_data {
 #define LSM_AUDIT_DATA_KMOD	8
 #define LSM_AUDIT_DATA_INODE	9
 #define LSM_AUDIT_DATA_DENTRY	10
+#define LSM_AUDIT_DATA_IOCTL_OP	11
 	struct task_struct *tsk;
 	union 	{
 		struct path path;
