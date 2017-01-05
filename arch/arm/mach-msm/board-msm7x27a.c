@@ -165,7 +165,7 @@ static struct msm_i2c_platform_data msm_gsbi1_qup_i2c_pdata = {
 #define MSM_RESERVE_MDP_SIZE  0x2300000
 #define MSM7x25A_MSM_RESERVE_MDP_SIZE       0x1500000
 
-#define MSM_RESERVE_ADSP_SIZE      0x1300000
+#define MSM_RESERVE_ADSP_SIZE      0x2000000
 #define MSM7x25A_MSM_RESERVE_ADSP_SIZE      0xB91000
 #define CAMERA_ZSL_SIZE		(SZ_1M * 60)
 #endif
@@ -415,7 +415,7 @@ static struct msm_pm_platform_data
 					.idle_enabled = 0,
 					.suspend_enabled = 0,
 					.latency = 500,
-					.residency = 500,
+					.residency = 6000,
 	},
 
 	[MSM_PM_MODE(0, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
@@ -434,7 +434,7 @@ static struct msm_pm_platform_data
 					.idle_enabled = 0,
 					.suspend_enabled = 0,
 					.latency = 500,
-					.residency = 500,
+					.residency = 6000,
 	},
 
 	[MSM_PM_MODE(1, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
@@ -453,7 +453,7 @@ static struct msm_pm_platform_data
 					.idle_enabled = 0,
 					.suspend_enabled = 0,
 					.latency = 500,
-					.residency = 500,
+					.residency = 6000,
 	},
 
 	[MSM_PM_MODE(2, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
@@ -472,7 +472,7 @@ static struct msm_pm_platform_data
 					.idle_enabled = 0,
 					.suspend_enabled = 0,
 					.latency = 500,
-					.residency = 500,
+					.residency = 6000,
 	},
 
 	[MSM_PM_MODE(3, MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT)] = {
@@ -724,7 +724,7 @@ early_param("reserve_audio_size", reserve_audio_size_setup);
 static void fix_sizes(void)
 {
 	if (machine_is_msm7625a_surf() || machine_is_msm7625a_ffa()) {
-		reserve_mdp_size = MSM7x25A_MSM_RESERVE_MDP_SIZE;;
+		reserve_mdp_size = MSM7x25A_MSM_RESERVE_MDP_SIZE;
 		reserve_adsp_size = MSM7x25A_MSM_RESERVE_ADSP_SIZE;
 	} else {
 		reserve_mdp_size = MSM_RESERVE_MDP_SIZE;
