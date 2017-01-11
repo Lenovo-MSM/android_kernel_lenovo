@@ -22,9 +22,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-#include <linux/module.h>
+#define DEBUG
 #include <linux/platform_device.h>
-#include <linux/interrupt.h>
 #include <net/bluetooth/bluetooth.h>
 #include <net/bluetooth/hci_core.h>
 #include <net/bluetooth/hci.h>
@@ -114,7 +113,7 @@ static long st_receive(void *priv_data, struct sk_buff *skb)
 	err = hci_recv_frame(skb);
 	if (err < 0) {
 		BT_ERR("Unable to push skb to HCI core(%d)", err);
-		return 0;
+		return err;
 	}
 
 	lhst->hdev->stat.byte_rx += skb->len;

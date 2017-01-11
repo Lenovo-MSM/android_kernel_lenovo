@@ -133,12 +133,6 @@ config BT_MSM_SLEEP
 	  Bluetooth MSM bluesleep driver.
 	  This driver provides support for BTS sleep.
 
-config HUAWEI_BT_WCN2243
-	bool "Qualcomm WCN2243 Bluetooth"
-	default y
-	help
-	  Select Y to use Qualcomm's BlueZ stack. Used by WCN2243. Not used in Huawei devices.
-
 config BT_HCIBFUSB
 	tristate "HCI BlueFRITZ! USB driver"
 	depends on USB

@@ -589,24 +589,14 @@ static int __init hci_uart_init(void)
 #ifdef CONFIG_BT_HCIUART_BCSP
 	bcsp_init();
 #endif
-#if defined(CONFIG_BT_HCIUART_LL) && defined(CONFIG_HUAWEI_BT_BCM43XX)
+#ifdef CONFIG_BT_HCIUART_LL
 	ll_init();
-#endif
-
-/*default without Huawei modification*/
-#if defined(CONFIG_BT_HCIUART_LL) && (!defined(CONFIG_HUAWEI_KERNEL))
-    ll_init();
 #endif
 #ifdef CONFIG_BT_HCIUART_ATH3K
 	ath_init();
 #endif
-#if defined(CONFIG_BT_HCIUART_IBS) && defined(CONFIG_HUAWEI_BT_WCN2243)
+#ifdef CONFIG_BT_HCIUART_IBS
 	ibs_init();
-#endif
-
-/*default without Huawei modification*/
-#if defined(CONFIG_BT_HCIUART_IBS) && (!defined(CONFIG_HUAWEI_KERNEL))
-    ibs_init();
 #endif
 
 	return 0;
@@ -622,23 +612,13 @@ static void __exit hci_uart_exit(void)
 #ifdef CONFIG_BT_HCIUART_BCSP
 	bcsp_deinit();
 #endif
-#if defined(CONFIG_BT_HCIUART_LL) && defined(CONFIG_HUAWEI_BT_BCM43XX)
-	ll_deinit();
-#endif
-
-/*default without Huawei modification*/
-#if defined(CONFIG_BT_HCIUART_LL) && (!defined(CONFIG_HUAWEI_KERNEL))
+#ifdef CONFIG_BT_HCIUART_LL
 	ll_deinit();
 #endif
 #ifdef CONFIG_BT_HCIUART_ATH3K
 	ath_deinit();
 #endif
-#if defined(CONFIG_BT_HCIUART_IBS) && defined(CONFIG_HUAWEI_BT_WCN2243)
-	ibs_deinit();
-#endif
-
-/*default without Huawei modification*/
-#if defined(CONFIG_BT_HCIUART_IBS) && (!defined(CONFIG_HUAWEI_KERNEL))
+#ifdef CONFIG_BT_HCIUART_IBS
 	ibs_deinit();
 #endif
 

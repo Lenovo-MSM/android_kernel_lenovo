@@ -1,6 +1,6 @@
 /*
    BlueZ - Bluetooth protocol stack for Linux
-   Copyright (c) 2000-2001, 2010-2011 Code Aurora Forum.  All rights reserved.
+   Copyright (c) 2000-2001, 2010-2012 Code Aurora Forum.  All rights reserved.
 
    Written 2000,2001 by Maxim Krasnyansky <maxk@qualcomm.com>
 
@@ -23,7 +23,6 @@
 */
 
 /* Bluetooth HCI core. */
-// rollback to original BlueZ
 
 #include <linux/jiffies.h>
 #include <linux/module.h>
@@ -562,6 +561,19 @@ int hci_dev_open(__u16 dev)
 		goto done;
 	}
 
+	if (!skb_queue_empty(&hdev->cmd_q)) {
+		BT_ERR("command queue is not empty, purging");
+		skb_queue_purge(&hdev->cmd_q);
+	}
+	if (!skb_queue_empty(&hdev->rx_q)) {
+		BT_ERR("rx queue is not empty, purging");
+		skb_queue_purge(&hdev->rx_q);
+	}
+	if (!skb_queue_empty(&hdev->raw_q)) {
+		BT_ERR("raw queue is not empty, purging");
+		skb_queue_purge(&hdev->raw_q);
+	}
+
 	if (!test_bit(HCI_RAW, &hdev->flags)) {
 		atomic_set(&hdev->cmd_cnt, 1);
 		set_bit(HCI_INIT, &hdev->flags);
@@ -614,7 +626,7 @@ done:
 	return ret;
 }
 
-static int hci_dev_do_close(struct hci_dev *hdev)
+static int hci_dev_do_close(struct hci_dev *hdev, u8 is_process)
 {
 	unsigned long keepflags = 0;
 
@@ -635,10 +647,16 @@ static int hci_dev_do_close(struct hci_dev *hdev)
 
 	hci_dev_lock_bh(hdev);
 	inquiry_cache_flush(hdev);
-	hci_conn_hash_flush(hdev);
+	hci_conn_hash_flush(hdev, is_process);
 	hci_dev_unlock_bh(hdev);
 
 	hci_notify(hdev, HCI_DEV_DOWN);
+
+	if (hdev->dev_type == HCI_BREDR) {
+		hci_dev_lock_bh(hdev);
+		mgmt_powered(hdev->id, 0);
+		hci_dev_unlock_bh(hdev);
+	}
 
 	if (hdev->flush)
 		hdev->flush(hdev);
@@ -672,12 +690,6 @@ static int hci_dev_do_close(struct hci_dev *hdev)
 	 * and no tasks are scheduled. */
 	hdev->close(hdev);
 
-	if (hdev->dev_type == HCI_BREDR) {
-		hci_dev_lock_bh(hdev);
-		mgmt_powered(hdev->id, 0);
-		hci_dev_unlock_bh(hdev);
-	}
-
 	/* Clear only non-persistent flags */
 	if (test_bit(HCI_MGMT, &hdev->flags))
 		set_bit(HCI_MGMT, &keepflags);
@@ -702,7 +714,7 @@ int hci_dev_close(__u16 dev)
 	hdev = hci_dev_get(dev);
 	if (!hdev)
 		return -ENODEV;
-	err = hci_dev_do_close(hdev);
+	err = hci_dev_do_close(hdev, 1);
 	hci_dev_put(hdev);
 	return err;
 }
@@ -728,7 +740,7 @@ int hci_dev_reset(__u16 dev)
 
 	hci_dev_lock_bh(hdev);
 	inquiry_cache_flush(hdev);
-	hci_conn_hash_flush(hdev);
+	hci_conn_hash_flush(hdev, 0);
 	hci_dev_unlock_bh(hdev);
 
 	if (hdev->flush)
@@ -941,7 +953,7 @@ static int hci_rfkill_set_block(void *data, bool blocked)
 	if (!blocked)
 		return 0;
 
-	hci_dev_do_close(hdev);
+	hci_dev_do_close(hdev, 0);
 
 	return 0;
 }
@@ -1456,15 +1468,9 @@ int hci_register_dev(struct hci_dev *hdev)
 	hdev->sniff_max_interval = 800;
 	hdev->sniff_min_interval = 80;
 
-	tasklet_init(&hdev->cmd_task, hci_cmd_task, (unsigned long) hdev);
-	tasklet_init(&hdev->rx_task, hci_rx_task, (unsigned long) hdev);
-	tasklet_init(&hdev->tx_task, hci_tx_task, (unsigned long) hdev);
-
 	skb_queue_head_init(&hdev->rx_q);
 	skb_queue_head_init(&hdev->cmd_q);
 	skb_queue_head_init(&hdev->raw_q);
-
-	setup_timer(&hdev->cmd_timer, hci_cmd_timer, (unsigned long) hdev);
 
 	for (i = 0; i < NUM_REASSEMBLY; i++)
 		hdev->reassembly[i] = NULL;
@@ -1487,15 +1493,26 @@ int hci_register_dev(struct hci_dev *hdev)
 
 	INIT_LIST_HEAD(&hdev->adv_entries);
 	rwlock_init(&hdev->adv_entries_lock);
-	setup_timer(&hdev->adv_timer, hci_adv_clear, (unsigned long) hdev);
 
 	INIT_WORK(&hdev->power_on, hci_power_on);
 	INIT_WORK(&hdev->power_off, hci_power_off);
-	setup_timer(&hdev->off_timer, hci_auto_off, (unsigned long) hdev);
 
 	memset(&hdev->stat, 0, sizeof(struct hci_dev_stats));
 
 	atomic_set(&hdev->promisc, 0);
+
+	//initial the task in case someone want to schedule it before other global variables init ready.
+	tasklet_init(&hdev->cmd_task, hci_cmd_task, (unsigned long) hdev);
+	tasklet_init(&hdev->rx_task, hci_rx_task, (unsigned long) hdev);
+	tasklet_init(&hdev->tx_task, hci_tx_task, (unsigned long) hdev);
+
+	setup_timer(&hdev->cmd_timer, hci_cmd_timer, (unsigned long) hdev);
+	setup_timer(&hdev->disco_timer, mgmt_disco_timeout,
+						(unsigned long) hdev);
+	setup_timer(&hdev->disco_le_timer, mgmt_disco_le_timeout,
+						(unsigned long) hdev);
+	setup_timer(&hdev->adv_timer, hci_adv_clear, (unsigned long) hdev);
+	setup_timer(&hdev->off_timer, hci_auto_off, (unsigned long) hdev);
 
 	write_unlock_bh(&hci_dev_list_lock);
 
@@ -1547,12 +1564,10 @@ int hci_unregister_dev(struct hci_dev *hdev)
 	list_del(&hdev->list);
 	write_unlock_bh(&hci_dev_list_lock);
 
-	hci_dev_do_close(hdev);
+	hci_dev_do_close(hdev, hdev->bus == HCI_SMD);
 
 	for (i = 0; i < NUM_REASSEMBLY; i++)
 		kfree_skb(hdev->reassembly[i]);
-
-	cancel_work_sync(&hdev->power_on);
 
 	if (!test_bit(HCI_INIT, &hdev->flags) &&
 				!test_bit(HCI_SETUP, &hdev->flags) &&
@@ -1574,8 +1589,12 @@ int hci_unregister_dev(struct hci_dev *hdev)
 
 	hci_unregister_sysfs(hdev);
 
+	/* Disable all timers */
 	hci_del_off_timer(hdev);
 	del_timer(&hdev->adv_timer);
+	del_timer(&hdev->cmd_timer);
+	del_timer(&hdev->disco_timer);
+	del_timer(&hdev->disco_le_timer);
 
 	destroy_workqueue(hdev->workqueue);
 
@@ -2117,6 +2136,9 @@ static inline struct hci_conn *hci_low_sent(struct hci_dev *hdev, __u8 type, int
 
 	/* We don't have to lock device here. Connections are always
 	 * added and removed with TX task disabled. */
+
+	BUG_ON(!h);
+
 	list_for_each(p, &h->list) {
 		struct hci_conn *c;
 		c = list_entry(p, struct hci_conn, list);
@@ -2216,7 +2238,6 @@ static inline void hci_sched_acl(struct hci_dev *hdev)
 			if (count > hdev->acl_cnt)
 				return;
 
-			hci_dev_lock(hdev);
 			hci_conn_enter_active_mode(conn, bt_cb(skb)->force_active);
 
 			hci_send_frame(skb);
@@ -2226,7 +2247,6 @@ static inline void hci_sched_acl(struct hci_dev *hdev)
 			quote -= count;
 
 			conn->sent += count;
-			hci_dev_unlock(hdev);
 		}
 	}
 }

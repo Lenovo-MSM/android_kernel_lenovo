@@ -519,12 +519,6 @@ config MACH_MSM7X27A_FFA
         help
           Support for the Qualcomm MSM7x27A FFA.
 
-config AUDI_KERNEL
-	depends on ARCH_MSM7X27A
-	bool "AUDI Tech Kernel"
-	help
-	  Support for the AUDI Kernel
-
 config MACH_MSM7625A_SURF
         depends on ARCH_MSM7X27A
         depends on !MSM_STACKED_MEMORY
