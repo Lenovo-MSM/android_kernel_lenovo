@@ -15,7 +15,7 @@
 
 
    Copyright (C) 2006-2007 - Motorola
-   Copyright (c) 2008-2010, Code Aurora Forum. All rights reserved.
+   Copyright (c) 2008-2010, The Linux Foundation. All rights reserved.
 
    Date         Author           Comment
    -----------  --------------   --------------------------------
@@ -44,7 +44,7 @@
 #include <linux/param.h>
 #include <linux/bitops.h>
 #include <linux/termios.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <mach/msm_serial_hs.h>
 
 #include <net/bluetooth/bluetooth.h>
